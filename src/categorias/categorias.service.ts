@@ -5,6 +5,7 @@ import { Model } from 'mongoose';
 import { CriarCategoriaDto } from './dtos/criar-categoria.dto';
 import { AtualizarCategoriaDto } from './dtos/atualizar-categoria.dto';
 import { JogadoresService } from 'src/jogadores/jogadores.service';
+import { Jogador } from 'src/jogadores/interfaces/jogador.interface';
 
 @Injectable()
 export class CategoriasService {
@@ -79,5 +80,17 @@ export class CategoriasService {
 
         categoriaEncontrada.jogadores.push(jogadorId);
         await this.categoriaModel.findOneAndUpdate({ _id: categoriaId }, {$set: categoriaEncontrada}).exec();
+    }
+
+    async consultarCategoriaDoJogador(id: string): Promise<Categoria | null> {
+       const jogadores = await this.jogadoresService.consultarTodosJogadores()
+
+       const jogadorFilter = jogadores.filter( jogador => jogador._id == id );
+
+       if (jogadorFilter.length == 0) {
+           throw new BadRequestException(`O id ${id} não é um jogador!`)
+       }
+
+       return await this.categoriaModel.findOne().where('jogadores').in([id]).exec();
     }
 }
